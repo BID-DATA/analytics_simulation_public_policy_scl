@@ -16,3 +16,8 @@ analytics_simulation_public_policy_scl.Rproj
 *.dcf
 app/test.Rmd
 .Rproj.user
+app/README.aux
+app/README.html
+app/README.out
+app/README.pdf
+app/README.toc

@@ -1,6 +1,6 @@
 options(warn = -1)
 
-
+#library(shinydashboard)
 library(semantic.dashboard)
 library(shiny)
 library(tidyverse)
@@ -45,9 +45,11 @@ data_source <- read_csv('simulations_concat.csv') %>%
 #####################
 
 ui <- dashboardPage(
-  dashboardHeader(title = "SCL Policy Simulator"),
+  dashboardHeader(title = "SCL Policy Simulator", inverted = FALSE),
   
-  dashboardSidebar(sidebarMenu(
+  dashboardSidebar(
+    size = "thin",
+    sidebarMenu(
     menuItem(tabName = "description", text = "Description", icon = icon("info")),
     menuItem(tabName = "simulator", text = "Simulator", icon = icon("lab")),
     menuItem(tabName = "regionresults", text = "Distribution results", icon = icon("globe")))),
@@ -66,7 +68,10 @@ ui <- dashboardPage(
                     #column(12, uiOutput('markdown'))
                     #htmlOutput("README.html")
                     #includeHTML('README.html')
-                    ) 
+                    ),
+                p("Note: This web site is available for use until 30/12/2022.
+                  After that, it will be archived. For more information, please contact scldata@iadb.org")
+                
 
         ),
     
@@ -211,7 +216,8 @@ ui <- dashboardPage(
                                      content = plotlyOutput("realpoor", height = 450)),
                                 list(menu = "Poverty after shock",
                                      content =plotlyOutput("deltapoor", height = 450))))
-              ),              
+              ),       
+               
               fluidRow(tabBox(title = "Poverty change", color = "grey",
                               tabs = list(
                                 list(menu = "Change in Poverty",
@@ -338,7 +344,8 @@ server <- function(input, output) {
       str_c('simulations_demo_shock_level_',toString(round(input$shock,1)), ".csv")
     },
     content = function(file) {
-      write.csv(load_data_shock() ,
+      write.csv(load_data_shock()  %>% 
+                  filter(shock_weight %in% c( round(input$shock,1))),
                 file, row.names = FALSE)
     }
   )
@@ -597,7 +604,7 @@ server <- function(input, output) {
                 va='bottom', color='black',
                 size=2) +  
       theme(legend.position = "none") +
-      ylab("Change (simulated value - latest real value)") +
+      ylab("Percentage point change (simulated value − last value)") +
       ggtitle('Percentage Point Change in Poverty') + 
       xlab('Country') +
       labs(caption = "Notes:
@@ -650,7 +657,7 @@ server <- function(input, output) {
       theme(legend.position = "none") +
       ylab('value') +
       xlab('Indicator') +
-      ggtitle('Urban/Rural - Percentage Point Change in Poverty: Real poverty rate minus poverty rate with price shock')
+      ggtitle('Urban/Rural - Poverty: Real Poverty Rate Minus Poverty Rate with Price Shock')
     
     ggplotly(p) %>% style(hoverinfo = 'none')
   })
@@ -693,8 +700,8 @@ server <- function(input, output) {
       scale_fill_manual(values = c("Decreased"= "#83b38f", "Increased"="#fc9272")) +      
       ylab('value') +
       xlab('Geographic Area') +
-      ggtitle('Urban/Rural - Percentage Point Change in Poverty: 
-              Real poverty rate minus poverty rate with price shock') + 
+      ggtitle('Urban/Rural - Poverty: 
+              Real Poverty Rate Minus Poverty Rate with Price Shock') + 
       theme(plot.title = element_text(size = 10, face = "bold"),
             text = element_text(size = 8)) +      
       coord_flip()
@@ -794,16 +801,15 @@ server <- function(input, output) {
                 nudge_y=0.125,
                 va='bottom', color='black',
                 size=2) +              theme(legend.position = "none") +
-      ylab("Change (simulated value - latest real value)") +
-      ggtitle('Percentage Point Change in Poverty: 
-              Real poverty rate minus poverty rate with price shock') + 
+      ylab("Percentage point change (simulated value − last value)") +
+      ggtitle('Poverty: Real Poverty Rate Minus Poverty Rate with Price Shock') + 
       xlab('Country') +
-      labs(caption = "Notes:
-      - Negative values are a reduction of poverty in percentage points")
+      labs(caption = "Source: Own calculations from household surveys.\n
+                      Note: Negative values are a reduction of poverty in percentage points.")      
     
-    ggsave('./assets/diff_pov.png',
-           plot = p,
-           device = "png")
+    # ggsave('./assets/diff_pov.png',
+    #        plot = p + ggtitle('Figure 2. Poverty: Real Poverty Rate Minus Poverty Rate with Price Shock') ,
+    #        device = "png")
     
     ggplotly(p) %>% style(hoverinfo = 'none')
   })  
@@ -839,17 +845,16 @@ server <- function(input, output) {
                 nudge_y=0.125,
                 va='bottom', color='black',
                 size=2) +              theme(legend.position = "none") +
-      ylab("Change (simulated value - latest real value)") +
-        ggtitle('Percentage Point Change in Extreme Poverty:
-              Real poverty rate minus poverty rate with price shock') + 
+      ylab("Percentage point change (simulated value − last value)") +
+        ggtitle('Extreme Poverty: Real Poverty Rate Minus Poverty Rate with Price Shock') + 
       xlab('Country') +
-      labs(caption = "Notes:
-      - Negative values are a reduction of poverty in percentage points")      
+      labs(caption = "Source: Own calculations from household surveys.\n
+                      Note: Negative values are a reduction of poverty in percentage points.")      
     
-    ggsave('./assets/diff_e_pov.png',
-           plot = p,
-           device = "png")
-    
+    # ggsave('./assets/diff_e_pov.png',
+    #        plot = p + ggtitle('Figure 1. Extreme Poverty: Real Poverty Rate Minus Poverty Rate with Price Shock') ,
+    #        device = "png")
+    # 
     ggplotly(p) %>% style(hoverinfo = 'none')
   })  
   # Gap People
@@ -985,13 +990,16 @@ server <- function(input, output) {
       ylab('value') +
       xlab('Country') +
       coord_flip() +
-      ylab("Change (simulated value - latest real value)") +
+      ylab("Percentage point change (simulated value − last value)") +
       labs(
       title = 'Results of simulating the effect of a shock of 10 to 50 percent
-      on the price of *Grains*',
-      caption = 'Notes:
-      - Negative values are a reduction of poverty in percentage points \n
-      - Percentage Point Change in Poverty: Real poverty rate minus poverty rate with price shock ')
+      on the price of *Grains*') + 
+      labs(caption = 'Source: Own calculations from household surveys.
+                      Note: The figure shows the results of simulating the effect of a shock of 10 to 50 percent
+                      on the price of “Grains” Negative values are a reduction of poverty in percentage points. 
+                     The percentage point change in poverty shows the real poverty rate minus the poverty
+                     rate with a price shock.')
+    
   })
     
   output$boxplot <- renderPlot({
@@ -1022,12 +1030,14 @@ server <- function(input, output) {
       ylab('value') +
       xlab('Country') +
       coord_flip() +
-      ylab("Change (simulated value - latest real value)") +
+      ylab("Percentage point change (simulated value − last value)") +
       ggtitle( ggtext::element_markdown('Results of simulating the effect of a shock of
                                         10 to 50 percent on the price of *Grains, Breads and Cereals*')) + 
-      labs(caption = 'Notes:
-      - Negative values are a reduction of poverty in percentage points \n
-      - Percentage Point Change in Poverty: Real poverty rate minus poverty rate with price shock ')
+      labs(caption = 'Source: Own calculations from household surveys.
+                      Note: The figure shows the results of simulating the effect of a shock of 10 to 50 percent
+                      on the price of “Grains, Breads and Cereals” Negative values are a reduction of poverty in percentage points. 
+                     The percentage point change in poverty shows the real poverty rate minus the poverty
+                     rate with a price shock.')
   })
   
   
@@ -1047,7 +1057,7 @@ server <- function(input, output) {
       mutate(indicator = case_when(indicator=='poor_national_change' ~ 'Poverty',
                                    indicator=='poor_e_national_change' ~ 'Extreme Poverty')) 
     
-    t %>% 
+    p <- t %>% 
       group_by(pais_c) %>% 
       mutate(mx = min(value[indicator=='Poverty'])) %>% 
       ungroup() %>% 
@@ -1059,11 +1069,18 @@ server <- function(input, output) {
       ylab('value') +
       xlab('Country') +
       coord_flip() +
-      ylab("Change (simulated value - latest real value)") +
-      ggtitle( 'Results of simulating the effect of a shock of 10 to 50 percent on the price of *All - Meat*') + 
-      labs(caption = 'Notes:
-      - Negative values are a reduction of poverty in percentage points \n
-      - Percentage Point Change in Poverty: Real poverty rate minus poverty rate with price shock ')
+      ylab("Percentage point change (simulated value − last value)") +
+      ggtitle( 'Results of simulating the effect of a shock of 10 to 50 percent on the price of *All - Except Meat*') + 
+      labs(caption = 'Source: Own calculations from household surveys.
+                      Note: The figure shows the results of simulating the effect of a shock of 10 to 50 
+           percent on the price of “All – Meat.” Negative values are a reduction of poverty in percentage 
+           points. The percentage point change in poverty shows the real poverty rate minus the poverty
+           rate with a price shock.')
+    
+    # ggsave('./assets/boxplot_nomeat.png',
+    #        plot = p + ggtitle('Figure A1. Changes in Poverty from Price Shocks on All Foods Except for Meat'),
+    #        device = "png")
+    p
   })
 
   output$boxplot_all <- renderPlot({
@@ -1094,11 +1111,13 @@ server <- function(input, output) {
       ylab('value') +
       xlab('Country') +
       coord_flip() +
-      ylab("Change (simulated value - latest real value)") +
+      ylab("Percentage point change (simulated value − last value)") +
       ggtitle( 'Results of simulating the effect of a shock of 10 to 50 percent on the price of *All*') + 
-      labs(caption = 'Notes:
-      - Negative values are a reduction of poverty in percentage points \n
-      - Percentage Point Change in Poverty: Real poverty rate minus poverty rate with price shock ')
+      labs(caption = 'Source: Own calculations from household surveys.
+                      Note: The figure shows the results of simulating the effect of a shock of 10 to 50 percent
+           on the price of “All” Negative values are a reduction of poverty in percentage points. 
+           The percentage point change in poverty shows the real poverty rate minus the poverty rate 
+           with a price shock.')
   })  
   
 }
