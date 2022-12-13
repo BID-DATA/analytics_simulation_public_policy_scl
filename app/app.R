@@ -21,8 +21,9 @@ skip_countries <- c('Guyana', 'Venezuela')
 skip_iso <- c('GUY', 'VEN')
 
 countries <- idbsocialdataR:::get_countries() %>% select(isoalpha3, country_name_en)
-population <- idbsocialdataR:::query_indicator(indicator = 'population_un',
-                                               year = 2022) %>%
+
+population <- read.csv("population-un-indicators.csv") %>% 
+  filter(year == 2022) %>% 
   select(isoalpha3, population_un=value) 
 gdp_data <- read_csv('gdp_output.csv') %>% 
   filter(year==2020)%>% 
@@ -719,7 +720,7 @@ server <- function(input, output) {
                                    indicator=='poor_e_national' ~ 'Extreme Poverty')) %>% 
       ggplot(aes(x=reorder(pais_c, desc(value)), y=value, fill=pais_c)) + 
       geom_bar(stat="identity") +
-      scale_y_continuous(labels=scales::percent) +
+      scale_y_continuous(labels=scales::comma) +
       geom_text(aes( label = round(value*100,2),group=1),
                 nudge_y=0.125,
                 va='bottom',
@@ -749,7 +750,7 @@ server <- function(input, output) {
                                    indicator=='poor_e_national_delta' ~ 'Extreme Poverty')) %>%       
       ggplot(aes(x=reorder(pais_c, desc(value)), y=value,  fill=pais_c)) + 
       geom_bar(stat="identity") +
-      scale_y_continuous(labels=scales::percent) +
+      scale_y_continuous(labels=scales::comma) +
       geom_text(aes( label = round(value*100,2),group=1),
                 nudge_y=0.125,
                 va='bottom',
